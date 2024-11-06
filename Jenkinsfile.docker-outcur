@@ -21,6 +21,14 @@ pipeline {
                 }
             }
         }
+        stage('Unit Test') {
+            agent { label 'build-node' }
+            steps {
+                script {
+                    bat "mvn test"
+                }
+            }
+        }
         stage('Dockerize App') {
             agent { label 'build-node' } 
             steps {
@@ -41,7 +49,7 @@ pipeline {
                 }
             }
         }
-        stage('Test and Generate Report') {
+        stage('Generate Report') {
             agent { label 'build-node' }
             steps {
                 script {
