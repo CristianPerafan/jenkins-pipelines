@@ -1,0 +1,27 @@
+pipeline {
+    agent any
+    stages {
+        stage('Clone Repository') {
+            agent { label 'master' }
+            steps {
+                deleteDir()
+                git url: 'https://github.com/CristianPerafan/saamfi2-backend-mod.git', 
+                    branch: 'main',
+                    credentialsId: 'github-credentials'
+                
+            }
+        }
+        stage('Deploy to Dokku') {
+            agent { label 'master' }
+            steps {
+                sshagent(['new_dokku']) {
+                    script {
+                        sh 'git remote add dokku-mod dokku@dokku:saamfi2-backend-mod || true'
+                        sh 'git push dokku-mod main:main'
+                    }
+                }
+            }
+        }
+        
+    }
+}
