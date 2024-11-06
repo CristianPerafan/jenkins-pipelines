@@ -55,10 +55,6 @@ pipeline {
                 script {
                     bat "mvn clean verify"
                 }
-            }
-        }
-        stage('JaCoCo Report') {
-            steps {
                 jacoco(
                     execPattern: '**/jacoco.exec',
                     classPattern: '**/classes',
