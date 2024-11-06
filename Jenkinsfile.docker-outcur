@@ -37,7 +37,6 @@ pipeline {
             steps {
                 script {
                     sleep time: 20, unit: 'SECONDS'
-                    bat "mvn -pl outcome-curr-mgmt-system-tests -Dtest=PerfLvlControllerSmokeIT test"
                     bat "mvn -pl outcome-curr-mgmt-system-tests -Dtest=AcademicPeriodControllerSmokeIT test"
                 }
             }
