@@ -1,0 +1,81 @@
+pipeline {
+    agent any
+    environment {
+        IMAGE_NAME = 'outcome-curr-mgmnt-backend-image'
+        CONTAINER_NAME = 'outcome-curr-mgmnt-backend-container'
+    }
+    stages {
+        stage('Clone Repository') {
+            agent { label 'build-node' }
+            steps {
+                deleteDir()
+                git url: 'https://github.com/CristianPerafan/outcome-curr-mgmnt-backend.git', 
+                    branch: 'main',
+                    credentialsId: 'github-credentials'
+                stash includes: '**/*', name: 'source-code'
+            }
+        }
+        stage('Build') {
+            agent { label 'build-node' }
+            steps {
+                deleteDir()
+                unstash 'source-code'
+                script {
+                    bat "mvn clean install -DskipTests"
+                }
+            }
+        }
+        stage('Unit Test') {
+            agent { label 'build-node' }
+            steps {
+                script {
+                    bat "mvn test"
+                }
+            }
+        }
+        stage('Dockerize App') {
+            agent { label 'build-node' }
+            steps {
+                script {
+                    bat "docker build -t ${IMAGE_NAME} ."
+                    bat "docker run --name ${CONTAINER_NAME} -d -p 9092:9092 ${IMAGE_NAME}"
+                }
+            }
+        }
+        stage('Smoke test') {
+            agent { label 'build-node' }
+            steps {
+                script {
+                    sleep time: 20, unit: 'SECONDS'
+                    bat "mvn -pl outcome-curr-mgmt-system-tests -Dtest=AcademicPeriodControllerSmokeIT test"
+                    bat "mvn -pl outcome-curr-mgmt-system-tests -Dtest=PerfLvlControllerSmokeIT test"
+                }
+            }
+        }
+        stage('Cleanup') {
+            agent { label 'build-node' }
+            steps {
+                script {
+                    bat "docker stop ${CONTAINER_NAME} || exit 0"
+                    bat "docker rm ${CONTAINER_NAME} || exit 0"
+                    bat "docker rmi ${IMAGE_NAME} || exit 0"
+                }
+            }
+        }
+        stage('Deploy to Dokku') {
+            agent { label 'master' }
+            steps {
+                deleteDir()
+                sshagent(['new_dokku']) {
+                    script {
+                    git url: 'https://github.com/CristianPerafan/outcome-curr-mgmnt-backend.git', 
+                        branch: 'main',
+                        credentialsId: 'github-credentials'
+                        sh 'git remote add dokku-mod dokku@dokku:outcome-curr-mgmnt-backend'
+                        sh 'git push dokku-mod main:main'
+                    }
+                }
+            }
+        }
+    }
+}
