@@ -35,9 +35,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @Timeout(15)
 public class PerfLvlControllerSmokeIT extends BaseSmokeIT {
 
-    public static final String OUT_CURR_TEST_USER = "OutCurrTestUser";
+    public static final String OUT_CURR_TEST_USER = "";
 
-    public static final String USER_PASSWORD = "123456";
+    public static final String USER_PASSWORD = "";
 
     private static String testUserJWTToken;
 
